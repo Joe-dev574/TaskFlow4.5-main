@@ -43,16 +43,16 @@ struct AddTaskView: View {
                                     .foregroundStyle(.mediumGrey)
                                     .font(.system(size: 14))
                                 Text(dateCreated.formatted(.dateTime))
-                                    .fontDesign(.serif)
                                     .foregroundStyle(.mediumGrey)
                                     .font(.system(size: 14))
                             }
                                 DatePicker("Date Due", selection: $taskDueDate, in: dateCreated..., displayedComponents: .date)
+                                .foregroundStyle(.mediumGrey)
                         }
                         .overlay(
                             RoundedRectangle(cornerRadius: 7)
-                                .stroke(itemCategory.color, lineWidth: 1))
-                    }
+                                .stroke(itemCategory.color, lineWidth: 1.5))
+                    }.foregroundStyle(itemCategory.color)
                    
                     .padding(.horizontal, 7)
                     ///title
@@ -63,18 +63,18 @@ struct AddTaskView: View {
                                     .multilineTextAlignment(.leading)
                                     .lineLimit(3)
                                     .padding(10)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.mediumGrey)
                             }
                             TextEditor(text: $taskName)
                                 .scrollContentBackground(.hidden)
                                 .background(Color.gray.opacity(0.1))
                                 .font(.system(size: 16))
-                                .fontDesign(.serif)
+                              
                         }
                             .overlay(
                                 RoundedRectangle(cornerRadius: 7)
-                                    .stroke(Color.secondary, lineWidth: 1))
-                    }
+                                    .stroke(itemCategory.color, lineWidth: 1.5))
+                    }.foregroundStyle(itemCategory.color)
                     .padding(.horizontal, 7)
                     ///description
                     Section("Brief Description") {
@@ -84,7 +84,7 @@ struct AddTaskView: View {
                                     .multilineTextAlignment(.leading)
                                     .lineLimit(3)
                                     .padding(10)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.mediumGrey)
                             }
                             TextEditor(text: $taskDescription)
                                 .scrollContentBackground(.hidden)
@@ -92,15 +92,13 @@ struct AddTaskView: View {
                                 .font(.system(size: 16))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 7)
-                                        .stroke(itemCategory.color, lineWidth: 1))
+                                        .stroke(itemCategory.color, lineWidth: 1.5))
                         }
-                    }
-                    .fontDesign(.serif)
+                    }.foregroundStyle(itemCategory.color)
                     .background(.background)
                 }  .padding(.horizontal, 7)
             }
             .padding(.horizontal, 10)
-            .fontDesign(.serif)
             //MARK:  TOOLBAR
                 .toolbar{
                     ToolbarItem(placement: .topBarLeading, content: {
@@ -109,7 +107,7 @@ struct AddTaskView: View {
                             dismiss()
                         } label: {
                             Text("Cancel")
-                                .fontDesign(.serif)
+                                .foregroundStyle(.mediumGrey)
                         }
                         .buttonStyle(.automatic)
                     })
@@ -124,8 +122,7 @@ struct AddTaskView: View {
                         } label: {
                             Text("Save")
                                 .font(.callout)
-                                .fontDesign(.serif)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(.mediumGrey)
                         }
                         .buttonStyle(.borderedProminent)
                         .disabled(taskName.isEmpty || taskDescription.isEmpty )
@@ -138,7 +135,7 @@ struct AddTaskView: View {
     //MARK: - Private Methods -
       func save() {
         /// Saving objectiveTask
-        let itemTask = ItemTask(taskName: taskName, taskDescription: taskDescription, isCompleted: true, taskDueDate: Date.distantFuture, dateCreated: Date.now)
+          let itemTask = ItemTask(taskName: taskName, taskDescription: taskDescription, isCompleted: false , taskDueDate: Date.distantFuture, dateCreated: Date.now, taskDueTime: Date.now )
         do {
             context.insert(itemTask)
             try context.save()

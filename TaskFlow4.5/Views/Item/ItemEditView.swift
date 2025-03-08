@@ -431,9 +431,8 @@ struct ItemEditView: View {
                 .accessibilityLabel("Show Task List")  // Accessibility label for the button
                 .accessibilityHint("Tap to view tasks in a sheet")  // Accessibility hint for user guidance
                 .sheet(isPresented: $showTaskSheet) {
-                    TaskListView (item: item)
+                    TaskListView (item: item, itemCategory: itemCategory)
                         .presentationDetents([.medium, .large])  // Allows medium or large sheet sizes
-                    
                 }
             TaskList()
         }
