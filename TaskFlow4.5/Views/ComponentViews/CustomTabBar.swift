@@ -60,7 +60,7 @@ struct CustomTabBar: View {
                         .opacity(activeTab == tab ? 1 : 0)
                 }
             
-            // Show tab title only when tab is active
+            // Show tab taskName only when tab is active
             if activeTab == tab {
                 Text(tab.rawValue)
                     .font(.callout)

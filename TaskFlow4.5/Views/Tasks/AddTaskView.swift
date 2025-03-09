@@ -15,6 +15,7 @@ struct AddTaskView: View {
     @Environment(\.dismiss) private var dismiss
     var editItem: Item?
     /// View Properties
+    @Binding var taskToEdit: ItemTask?
     @State  var taskName: String = ""
     @State  var taskDescription: String = ""
     @State  var dateCreated: Date = .now
@@ -25,6 +26,10 @@ struct AddTaskView: View {
     @State var itemCategory: Category  // Item category
     /// Random Tint
     @State var tint: TintColor = tints.randomElement()!
+    
+    private var isEditing: Bool {
+        taskToEdit != nil
+    }
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
@@ -55,7 +60,7 @@ struct AddTaskView: View {
                     }.foregroundStyle(itemCategory.color)
                    
                     .padding(.horizontal, 7)
-                    ///title
+                    ///taskName
                     Section("Title") {
                         ZStack(alignment: .topLeading) {
                             if taskName.isEmpty {
@@ -98,6 +103,7 @@ struct AddTaskView: View {
                     .background(.background)
                 }  .padding(.horizontal, 7)
             }
+            .navigationTitle(isEditing ? "Edit Task" : "Add Task")
             .padding(.horizontal, 10)
             //MARK:  TOOLBAR
                 .toolbar{
@@ -116,13 +122,13 @@ struct AddTaskView: View {
                     })
                     ToolbarItem(placement:.topBarTrailing, content: {
                         Button {
-                            /// Saving objectiveTask
+                            /// Saving itemTask
                             save()
-                        
+                            HapticsManager.notification(type: .success)
                         } label: {
                             Text("Save")
                                 .font(.callout)
-                                .foregroundStyle(.mediumGrey)
+                                .foregroundStyle(.white)
                         }
                         .buttonStyle(.borderedProminent)
                         .disabled(taskName.isEmpty || taskDescription.isEmpty )
@@ -130,8 +136,15 @@ struct AddTaskView: View {
                     })
                 }
                 .padding(.top, -25)
+                .onAppear {
+                    if let task = taskToEdit {
+                        taskName = task.taskName
+                        taskDescription = task.taskDescription
+                    }
+                }
         }
     }
+
     //MARK: - Private Methods -
       func save() {
         /// Saving objectiveTask

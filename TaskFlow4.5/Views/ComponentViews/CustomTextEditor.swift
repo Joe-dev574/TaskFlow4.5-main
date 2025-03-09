@@ -17,7 +17,7 @@ struct CustomTextEditor: View {
     // MARK: - Body
     var body: some View {
         ZStack(alignment: .topLeading) {    // Stack for overlaying placeholder and editor
-            // Placeholder text shown when remarks is empty
+            // Placeholder text shown when taskDescription is empty
             if remarks.isEmpty {
                 Text(placeholder)
                     .foregroundStyle(.secondary)    // Muted color for placeholder

@@ -20,33 +20,33 @@ struct TaskListView: View {
     // MARK: - Body
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(tasks) { task in
-                        TaskRowView(itemTask: task) { event in
-                            handleTaskRowEvent(event, for: task)
+            List {
+                ForEach(tasks) { task in
+                    TaskRowView(itemTask: task) { event in
+                        handleTaskRowEvent(event, for: task)
+                    }
+                    .padding(.vertical, 4)
+                    .listRowBackground(Color(.systemBackground))
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                    .swipeActions(edge: .leading) {
+                        Button(role: .none) {
+                            taskToEdit = task
+                            showingAddTask = true
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
                         }
-                        .padding(.horizontal)
-                        .padding(.vertical, 4)
-                        .background(Color(.systemBackground))
-                        .swipeActions(edge: .leading) {
-                            Button(role: .none) {
-                                taskToEdit = task
-                                showingAddTask = true
-                            } label: {
-                                Label("Edit", systemImage: "pencil")
-                            }
-                            .tint(.blue)
-                            
-                            Button(role: .destructive) {
-                                deleteTask(task)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+                        .tint(.blue)
+                    }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            deleteTask(task)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
                         }
                     }
                 }
             }
+            .listStyle(.plain)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: {
@@ -77,7 +77,8 @@ struct TaskListView: View {
                 }
             }
             .sheet(isPresented: $showingAddTask) {
-                TaskFormView(taskToEdit: $taskToEdit, itemCategory: $itemCategory)
+//                TaskFormView(taskToEdit: $taskToEdit, itemCategory: $itemCategory)
+                AddTaskView(taskToEdit: $taskToEdit, itemCategory: itemCategory)
                     .presentationDetents([.medium])
             }
             .background(Color(.systemGroupedBackground))
@@ -123,17 +124,19 @@ struct TaskListView: View {
         }
         
         var body: some View {
-            NavigationView {
+            NavigationStack {
                 ScrollView {
                     VStack {
                         Form {
                             Section(header: Text("Task Details")) {
                                 TextField("Task Name", text: $taskName)
                                     .accessibilityLabel("Task name")
+                                    .foregroundStyle(.mediumGrey)
                                 TextField("Description", text: $taskDescription, axis: .vertical)
                                     .lineLimit(3...10)
                                     .accessibilityLabel("Task description")
-                            }
+                                    .foregroundStyle(.mediumGrey)
+                            }.foregroundStyle(.mediumGrey)
                         }
                     }
                 }

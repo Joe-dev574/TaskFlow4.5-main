@@ -18,8 +18,8 @@ struct ItemEditView: View {
     
     // MARK: - State Properties
     private let editItem: Item  // Working copy of the item for editing
-    @State private var title: String  // Item title
-    @State private var remarks: String  // Item description
+    @State private var taskName: String  // Item taskName
+    @State private var taskDescription: String  // Item description
     @State private var dateAdded: Date  // Creation date
     @State private var dateDue: Date  // Due date
     @State private var dateStarted: Date  // Start date
@@ -32,46 +32,42 @@ struct ItemEditView: View {
     @State private var errorMessage: String = ""  // Error message text
     @State private var showTags = false  // Controls tags sheet visibility
     @State private var itemTasks: [ItemTask] = []
+    @State private var taskListHeight: CGFloat = 0 // Track the height of TaskListView content
     // MARK: - Initial Values for Comparison
-    private let initialTitle: String  // Initial title for change detection
-    private let initialRemarks: String  // Initial remarks for change detection
-    private let initialDateAdded: Date  // Initial added date for change detection
-    private let initialDateDue: Date  // Initial due date for change detection
-    private let initialDateStarted: Date  // Initial start date for change detection
-    private let initialDateCompleted: Date  // Initial completion date for change detection
-    private let initialCategory: Category  // Initial category for change detection
-    private let initialStatus: Item.Status  // Initial status for change detection
-    private let initialTags: [Tag]?  // Initial tags for change detection
-    private let initialItemTasks: [ItemTask]?
+    private let initialTaskName: String
+        private let initialTaskDescription: String
+        private let initialDateAdded: Date
+        private let initialDateDue: Date
+        private let initialDateStarted: Date
+        private let initialDateCompleted: Date
+        private let initialCategory: Category
+        private let initialStatus: Item.Status
+        private let initialTags: [Tag]?
+        private let initialItemTasks: [ItemTask]?
     // MARK: - Initialization
     init(editItem: Item) {
-        self.item = editItem  // Initialize the immutable item reference
-        self.editItem = editItem  // Set the working copy
-        
-        // Initialize state properties with current item values
-        _title = State(initialValue: editItem.title)
-        _remarks = State(initialValue: editItem.remarks)
-        _dateAdded = State(initialValue: editItem.dateAdded)
-        _dateDue = State(initialValue: editItem.dateDue)
-        _dateStarted = State(initialValue: editItem.dateStarted)
-        _dateCompleted = State(initialValue: editItem.dateCompleted)
-        _itemCategory = State(
-            initialValue: Category(rawValue: editItem.category) ?? .today)
-        _itemStatus = State(
-            initialValue: Item.Status(rawValue: editItem.status)!)
-        _itemTasks = State(initialValue: editItem.itemTasks!)
-        // Store initial values for change comparison
-        initialTitle = editItem.title
-        initialRemarks = editItem.remarks
-        initialDateAdded = editItem.dateAdded
-        initialDateDue = editItem.dateDue
-        initialDateStarted = editItem.dateStarted
-        initialDateCompleted = editItem.dateCompleted
-        initialCategory = Category(rawValue: editItem.category) ?? .today
-        initialStatus = Item.Status(rawValue: editItem.status)!
-        initialTags = editItem.tags  // Capture initial tags for comparison
-        initialItemTasks = editItem.itemTasks
-    }
+            self.item = editItem
+            self.editItem = editItem
+            _taskName = State(initialValue: editItem.title)
+            _taskDescription = State(initialValue: editItem.remarks)
+            _dateAdded = State(initialValue: editItem.dateAdded)
+            _dateDue = State(initialValue: editItem.dateDue)
+            _dateStarted = State(initialValue: editItem.dateStarted)
+            _dateCompleted = State(initialValue: editItem.dateCompleted)
+            _itemCategory = State(initialValue: Category(rawValue: editItem.category) ?? .today)
+            _itemStatus = State(initialValue: Item.Status(rawValue: editItem.status)!)
+            _itemTasks = State(initialValue: editItem.itemTasks ?? [])
+            initialTaskName = editItem.title
+            initialTaskDescription = editItem.remarks
+            initialDateAdded = editItem.dateAdded
+            initialDateDue = editItem.dateDue
+            initialDateStarted = editItem.dateStarted
+            initialDateCompleted = editItem.dateCompleted
+            initialCategory = Category(rawValue: editItem.category) ?? .today
+            initialStatus = Item.Status(rawValue: editItem.status)!
+            initialTags = editItem.tags
+            initialItemTasks = editItem.itemTasks
+        }
     
     // MARK: - Body
     var body: some View {
@@ -79,7 +75,9 @@ struct ItemEditView: View {
             backgroundView  // Background gradient layer
             contentView  // Main content layer
         }
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)  // Support for large text sizes
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .presentationDetents([.fraction(0.5), .fraction(0.8), .large]) // Allow multiple height options
+                .presentationDragIndicator(.visible)
     }
     
     // MARK: - Background View
@@ -125,7 +123,7 @@ struct ItemEditView: View {
                 }
                 .padding()
             }
-            .navigationTitle(item.title)  // Dynamic navigation title
+            .navigationTitle(item.title)  // Dynamic navigation taskName
             .toolbar { toolbarItems }  // Custom toolbar with save button
             .foregroundStyle(
                 calculateContrastingColor(background: itemCategory.color)
@@ -151,12 +149,12 @@ struct ItemEditView: View {
     private var titleSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Title")
-                .foregroundStyle(itemCategory.color)  // Section title in medium grey
+                .foregroundStyle(itemCategory.color)  // Section taskName in medium grey
                 .font(.title3)
             
             LabeledContent {
                 CustomTextEditor(
-                    remarks: $title, placeholder: "Enter title of your item",
+                    remarks: $taskName, placeholder: "Enter taskName of your item",
                     minHeight: 45
                 )
                 .foregroundStyle(.mediumGrey)
@@ -189,7 +187,7 @@ struct ItemEditView: View {
                 .font(.title3)
             
             CustomTextEditor(
-                remarks: $remarks,
+                remarks: $taskDescription,
                 placeholder: "Enter a brief description of your item",
                 minHeight: 85
             )
@@ -396,21 +394,44 @@ struct ItemEditView: View {
                 .stroke(itemCategory.color.opacity(0.3), lineWidth: 1)
         )
     }
-    
-    // MARK: Task Section
+    // MARK: - Preference Key for Height Measurement
+    struct HeightPreferenceKey: PreferenceKey {
+        static var defaultValue: CGFloat = 0
+        static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+            value = max(value, nextValue())
+        }
+    }
+    // MARK: - Private Computed Properties
+        private var hasFormChanged: Bool {
+            taskName != initialTaskName || taskDescription != initialTaskDescription
+            || dateAdded != initialDateAdded || dateDue != initialDateDue
+            || dateStarted != initialDateStarted
+            || dateCompleted != initialDateCompleted
+            || itemCategory != initialCategory || editItem.tags != initialTags
+        }
+    // MARK: **Task Section**
     private var taskSection: some View {
-            VStack(alignment: .leading, spacing: 12) {
+        
                 
                 TaskListView()
+                    .frame(minHeight: 200, maxHeight: 800) // Ensure enough space for tasks
+                                    .foregroundStyle(.mediumGrey)
+                                    .background(
+                                        GeometryReader { geometry in
+                                            Color.clear
+                                                .preference(key: HeightPreferenceKey.self, value: geometry.size.height)
+                                        }
+                                    )
                     .foregroundStyle(.mediumGrey)
-            }
             .background(itemCategory.color.opacity(SectionStyle.reducedOpacity))
             .clipShape(RoundedRectangle(cornerRadius: SectionStyle.cornerRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: SectionStyle.cornerRadius)
                     .stroke(itemCategory.color.opacity(0.3), lineWidth: 1)
             )
-        
+            .onPreferenceChange(HeightPreferenceKey.self) { height in
+                        taskListHeight = height
+                    }
     }
     // MARK: - Toolbar Items
     private var toolbarItems: some ToolbarContent {
@@ -438,21 +459,12 @@ struct ItemEditView: View {
         }
     }
     
-    // MARK: - Private Computed Properties
-    private var hasFormChanged: Bool {
-        // Check if any field has changed from initial values, including tags
-        title != initialTitle || remarks != initialRemarks
-        || dateAdded != initialDateAdded || dateDue != initialDateDue
-        || dateStarted != initialDateStarted
-        || dateCompleted != initialDateCompleted
-        || itemCategory != initialCategory || editItem.tags != initialTags
-    }
     
     // MARK: - Private Methods
     private func saveEditedItem() {
         // Update working copy with current values
-        editItem.title = title
-        editItem.remarks = remarks
+        editItem.title = taskName
+        editItem.remarks = taskDescription
         editItem.dateAdded = dateAdded
         editItem.dateDue = dateDue
         editItem.dateStarted = dateStarted
@@ -473,43 +485,42 @@ struct ItemEditView: View {
     }
     //MARK:  DATE PICKERS FOR CATEGORY
     @ViewBuilder
-    private func datePickersForCategory() -> some View {
-        VStack(spacing: 12) {
-            LabeledContent("Due") {
-                DatePicker("", selection: $dateDue)
-                    .labelsHidden()
-                    .foregroundStyle(itemCategory.color)
-                    .font(.caption)
-            }
-            .foregroundStyle(.mediumGrey)
-            .accessibilityLabel("Due Date")
-            .accessibilityHint("Select the due date for your item")
-            
-            if itemCategory == .today || itemCategory == .work {
-                LabeledContent("Start") {
-                    DatePicker("", selection: $dateStarted)
+        private func datePickersForCategory() -> some View {
+            VStack(spacing: 12) {
+                LabeledContent("Due") {
+                    DatePicker("", selection: $dateDue)
                         .labelsHidden()
-                    
+                        .foregroundStyle(itemCategory.color)
                         .font(.caption)
                 }
                 .foregroundStyle(.mediumGrey)
-                .accessibilityLabel("Start Date")
-                .accessibilityHint("Select the start date for your item")
-            }
-            
-            if itemCategory == .today {
-                LabeledContent("Finish") {
-                    DatePicker("", selection: $dateCompleted)
-                        .labelsHidden()
-                        .foregroundStyle(.mediumGrey)
-                        .font(.caption)
+                .accessibilityLabel("Due Date")
+                .accessibilityHint("Select the due date for your item")
+                
+                if itemCategory == .today || itemCategory == .work {
+                    LabeledContent("Start") {
+                        DatePicker("", selection: $dateStarted)
+                            .labelsHidden()
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.mediumGrey)
+                    .accessibilityLabel("Start Date")
+                    .accessibilityHint("Select the start date for your item")
                 }
-                .foregroundStyle(.mediumGrey)
-                .accessibilityLabel("Completion Date")
-                .accessibilityHint("Select the completion date for your item")
+                
+                if itemCategory == .today {
+                    LabeledContent("Finish") {
+                        DatePicker("", selection: $dateCompleted)
+                            .labelsHidden()
+                            .foregroundStyle(.mediumGrey)
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.mediumGrey)
+                    .accessibilityLabel("Completion Date")
+                    .accessibilityHint("Select the completion date for your item")
+                }
             }
         }
-    }
     //MARK:  FUNCTIONS
     private func relativeLuminance(color: Color) -> Double {
         let uiColor = UIColor(color)

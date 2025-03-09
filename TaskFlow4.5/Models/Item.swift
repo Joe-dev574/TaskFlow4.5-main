@@ -14,7 +14,7 @@ import SwiftData
 final class Item {
     // MARK: - Properties
     
-    /// The title of the item, required field
+    /// The taskName of the item, required field
     var title: String
     
     /// Additional notes or comments about the item
@@ -53,8 +53,8 @@ final class Item {
     
     /// Initializes a new Item with default values
     /// - Parameters:
-    ///   - title: The item's title (default: empty string)
-    ///   - remarks: Additional notes (default: empty string)
+    ///   - taskName: The item's taskName (default: empty string)
+    ///   - taskDescription: Additional notes (default: empty string)
     ///   - dateAdded: Creation date (default: now)
     ///   - dateDue: Due date (default: now)
     ///   - dateStarted: Start date (default: now)
