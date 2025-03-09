@@ -9,8 +9,6 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - Main App View
-/// The main view of the task app, displaying a list of tasks and providing CRUD functionality.
 struct TaskListView: View {
     // MARK: - Properties
     @Environment(\.modelContext) private var modelContext
@@ -18,34 +16,37 @@ struct TaskListView: View {
     @State var showingAddTask = false
     @State var taskToEdit: ItemTask?
     @State var itemCategory: Category = .today
+    
     // MARK: - Body
     var body: some View {
         NavigationView {
-            List {
-                ForEach(tasks) { task in
-                    TaskRowView(itemTask: task) { event in
-                        handleTaskRowEvent(event, for: task)
-                    }
-                    .swipeActions(edge: .trailing) {
-                        // Edit action
-                        Button(role: .none) {
-                            taskToEdit = task
-                            showingAddTask = true
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(tasks) { task in
+                        TaskRowView(itemTask: task) { event in
+                            handleTaskRowEvent(event, for: task)
                         }
-                        .tint(.blue)
-                        
-                        // Delete action
-                        Button(role: .destructive) {
-                            deleteTask(task)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
+                        .padding(.horizontal)
+                        .padding(.vertical, 4)
+                        .background(Color(.systemBackground))
+                        .swipeActions(edge: .leading) {
+                            Button(role: .none) {
+                                taskToEdit = task
+                                showingAddTask = true
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
+                            .tint(.blue)
+                            
+                            Button(role: .destructive) {
+                                deleteTask(task)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
                     }
                 }
             }
-            .navigationTitle("Tasks")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: {
@@ -53,33 +54,38 @@ struct TaskListView: View {
                         showingAddTask = true
                     }) {
                         HStack(spacing: 7) {
-                            // Button label text
                             Text("Add Task")
-                                .font(.subheadline)  // Smaller font for button appearance
-                                .foregroundStyle(.white)  // White text for contrast
+                                .font(.subheadline)
+                                .foregroundStyle(.white)
                             
-                            
-                            // Plus icon to indicate adding a new task
                             Image(systemName: "plus.circle.fill")
-                                .imageScale(.large)  // Larger icon size for visibility
-                                .foregroundStyle(.white)  // White icon for consistency
+                                .imageScale(.large)
+                                .foregroundStyle(.white)
                         }
-                        .padding(7)  // Internal padding for the button content
-                        .background(itemCategory.color.gradient)  // Gradient background matching category
-                        .clipShape(
-                            RoundedRectangle(cornerRadius: 10)
-                        )  // Rounded corners for a button-like look
+                        .padding(7)
+                        .background(itemCategory.color.gradient)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
+                    .padding(.horizontal, 7)
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Text("Tasks")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(itemCategory.color)
+                        .padding(.horizontal, 12)
                 }
             }
             .sheet(isPresented: $showingAddTask) {
-                TaskFormView(taskToEdit: $taskToEdit)
+                TaskFormView(taskToEdit: $taskToEdit, itemCategory: $itemCategory)
+                    .presentationDetents([.medium])
             }
+            .background(Color(.systemGroupedBackground))
         }
     }
+    
     // MARK: - Methods
-    /// Handles events triggered from TaskRowView.
-     func handleTaskRowEvent(_ event: TaskRowEvent, for task: ItemTask) {
+    func handleTaskRowEvent(_ event: TaskRowEvent, for task: ItemTask) {
         switch event {
         case .toggleCompletion:
             task.toggleCompletion()
@@ -87,13 +93,11 @@ struct TaskListView: View {
         }
     }
     
-    /// Deletes the specified task from the model context.
-     func deleteTask(_ task: ItemTask) {
+    func deleteTask(_ task: ItemTask) {
         modelContext.delete(task)
         saveContext()
     }
     
-    /// Saves changes to the model context.
     private func saveContext() {
         do {
             try modelContext.save()
@@ -102,31 +106,35 @@ struct TaskListView: View {
         }
     }
     
-    
     // MARK: - Task Form View
-    /// A form view for adding or editing a task.
     struct TaskFormView: View {
-        // MARK: - Properties
         @Environment(\.dismiss) private var dismiss
         @Environment(\.modelContext) private var modelContext
         @Binding var taskToEdit: ItemTask?
+        @Binding var itemCategory: Category
         @State private var taskName: String = ""
         @State private var taskDescription: String = ""
+        @State private var dateCreated: Date = .now
+        @State private var taskDueDate: Date = .now
+        @State private var category: Category = .today
         
         private var isEditing: Bool {
             taskToEdit != nil
         }
         
-        // MARK: - Body
         var body: some View {
             NavigationView {
-                Form {
-                    Section(header: Text("Task Details")) {
-                        TextField("Task Name", text: $taskName)
-                            .accessibilityLabel("Task name")
-                        TextField("Description", text: $taskDescription, axis: .vertical)
-                            .lineLimit(3...10)
-                            .accessibilityLabel("Task description")
+                ScrollView {
+                    VStack {
+                        Form {
+                            Section(header: Text("Task Details")) {
+                                TextField("Task Name", text: $taskName)
+                                    .accessibilityLabel("Task name")
+                                TextField("Description", text: $taskDescription, axis: .vertical)
+                                    .lineLimit(3...10)
+                                    .accessibilityLabel("Task description")
+                            }
+                        }
                     }
                 }
                 .navigationTitle(isEditing ? "Edit Task" : "Add Task")
@@ -153,22 +161,17 @@ struct TaskListView: View {
             }
         }
         
-        // MARK: - Methods
-        /// Saves a new task or updates an existing one.
         private func saveOrUpdateTask() {
             if let task = taskToEdit {
-                // Update existing task
                 task.updateTaskName(taskName)
                 task.taskDescription = taskDescription
             } else {
-                // Create new task
                 let newTask = ItemTask(taskName: taskName, taskDescription: taskDescription)
                 modelContext.insert(newTask)
             }
             saveContext()
         }
         
-        /// Saves changes to the model context.
         private func saveContext() {
             do {
                 try modelContext.save()
@@ -178,4 +181,3 @@ struct TaskListView: View {
         }
     }
 }
-

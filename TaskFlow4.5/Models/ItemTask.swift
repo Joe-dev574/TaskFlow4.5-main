@@ -28,6 +28,7 @@ final class ItemTask: Codable {
     @Attribute(.unique)
     var dateCreated = Date.now
     
+    var taskDueDate = Date.now
     /// Optional reference to a related Item object (parent entity).
     @Relationship(deleteRule: .nullify, inverse: \Item.itemTasks)
     var item: Item?
@@ -69,6 +70,7 @@ final class ItemTask: Codable {
         taskDescription: String = "",
         isCompleted: Bool = false,
         dateCreated: Date = Date.now,
+        taskDueDate: Date = Date.now,
         item: Item? = nil
     ) {
         let trimmedName = taskName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -76,6 +78,7 @@ final class ItemTask: Codable {
         self.taskDescription = taskDescription
         self.isCompleted = isCompleted
         self.dateCreated = dateCreated
+        self.taskDueDate = taskDueDate
         self.item = item
     }
     
@@ -101,6 +104,7 @@ final class ItemTask: Codable {
         case taskDescription
         case isCompleted
         case dateCreated
+        case taskDueDate
     }
     
     /// Encodes the ItemTask instance into the provided encoder.
@@ -112,7 +116,9 @@ final class ItemTask: Codable {
         try container.encode(taskDescription, forKey: .taskDescription)
         try container.encode(isCompleted, forKey: .isCompleted)
         try container.encode(dateCreated, forKey: .dateCreated)
+        try container.encode(taskDueDate, forKey: .taskDueDate)
     }
+    
     
     /// Initializes an ItemTask instance from a decoder.
     /// - Parameter decoder: The decoder to decode the data from.
@@ -120,12 +126,12 @@ final class ItemTask: Codable {
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let decodedTaskName = try container.decode(String.self, forKey: .taskName)
-        
         let trimmedName = decodedTaskName.trimmingCharacters(in: .whitespacesAndNewlines)
         self.taskName = trimmedName.isEmpty ? "Untitled Task" : decodedTaskName
         self.taskDescription = try container.decode(String.self, forKey: .taskDescription)
         self.isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
         self.dateCreated = try container.decode(Date.self, forKey: .dateCreated)
+        self.taskDueDate = try container.decode(Date.self, forKey: .taskDueDate)
         self.item = nil // Relationships are not decoded; must be set separately
     }
 }

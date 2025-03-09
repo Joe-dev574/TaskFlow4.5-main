@@ -399,20 +399,19 @@ struct ItemEditView: View {
     
     // MARK: Task Section
     private var taskSection: some View {
-   
             VStack(alignment: .leading, spacing: 12) {
-               
-                TaskListView( itemCategory: itemCategory)
+                
+                TaskListView()
                     .foregroundStyle(.mediumGrey)
             }
-            .padding(SectionStyle.padding)
-            //       .background(itemCategory.color.opacity(SectionStyle.reducedOpacity))
+            .background(itemCategory.color.opacity(SectionStyle.reducedOpacity))
             .clipShape(RoundedRectangle(cornerRadius: SectionStyle.cornerRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: SectionStyle.cornerRadius)
                     .stroke(itemCategory.color.opacity(0.3), lineWidth: 1)
             )
-        }
+        
+    }
     // MARK: - Toolbar Items
     private var toolbarItems: some ToolbarContent {
         
