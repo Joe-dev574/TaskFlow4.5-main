@@ -401,42 +401,9 @@ struct ItemEditView: View {
     private var taskSection: some View {
    
             VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Tasks")
-                        .foregroundStyle(itemCategory.color)  // Section title in medium grey
-                        .font(.title3)
-                    Spacer()
-                    Button {
-                        HapticsManager.notification(type: .success)  // Haptic feedback on tap
-                        showTaskSheet.toggle()  // Toggles the sheet presentation
-                    } label: {
-                        HStack(spacing: 7) {
-                            // Button label text
-                            Text("Manage Tasks")
-                                .font(.subheadline)  // Smaller font for button appearance
-                                .foregroundStyle(.white)  // White text for contrast
-                            
-                            
-                            // Plus icon to indicate adding a new task
-                            Image(systemName: "plus.circle.fill")
-                                .imageScale(.large)  // Larger icon size for visibility
-                                .foregroundStyle(.white)  // White icon for consistency
-                        }
-                        .padding(7)  // Internal padding for the button content
-                        .background(itemCategory.color.gradient)  // Gradient background matching category
-                        .clipShape(
-                            RoundedRectangle(cornerRadius: SectionStyle.cornerRadius)
-                        )  // Rounded corners for a button-like look
-                    }
-                }
-                .accessibilityLabel("Show Task List")  // Accessibility label for the button
-                .accessibilityHint("Tap to view tasks in a sheet")  // Accessibility hint for user guidance
-                .sheet(isPresented: $showTaskSheet) {
-                    TaskScreen(item: item, itemTasks: itemTasks, itemCategory: itemCategory)
-                        .presentationDetents([.medium, .large])  // Allows medium or large sheet sizes
-                }
-         //       TaskList()
-                    .foregroundStyle(.darkGrey)
+               
+                TaskListView( itemCategory: itemCategory)
+                    .foregroundStyle(.mediumGrey)
             }
             .padding(SectionStyle.padding)
             //       .background(itemCategory.color.opacity(SectionStyle.reducedOpacity))

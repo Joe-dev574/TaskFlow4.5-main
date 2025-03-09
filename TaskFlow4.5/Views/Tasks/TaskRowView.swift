@@ -9,81 +9,83 @@ import SwiftUI
 import SwiftData
 
 
-// MARK: - Task Row Event
-/// An enumeration defining possible events for a task row.
+import SwiftUI
+import SwiftData
+
 enum TaskRowEvent {
-    case toggleCompletion  // Event for toggling task completion
+    case toggleCompletion
 }
-// MARK: - Task Row View
-/// A view representing a single task row in the task list.
+
 struct TaskRowView: View {
-    // MARK: - Properties
-    @Environment(\.modelContext) var modelContext
-    let itemTask: ItemTask  // The task to display
-    let onEvent: (TaskRowEvent) -> Void  // Closure to handle events (e.g., toggling completion)
+    @Environment(\.modelContext) private var modelContext
+    let itemTask: ItemTask
+    let onEvent: (TaskRowEvent) -> Void
     @State private var checked: Bool = false
-    
+
     private func formatItemTaskDate(_ date: Date) -> String {
-        
         if date.isToday {
             return "Today"
+        } else if date.isYesterday {
+            return "Yesterday"
         } else if date.isTomorrow {
             return "Tomorrow"
         } else {
             return date.formatted(date: .numeric, time: .omitted)
         }
     }
-    // MARK: - Body
-    var body: some View {
-        HStack(alignment: .top) {
-            // Button to toggle task completion
-                        Button(action: {
-                            onEvent(.toggleCompletion)  // Trigger toggle completion event when tapped
-                        }) {
-                            Image(systemName: itemTask.isCompleted ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(.gray)  // Placeholder color; replace with your desired color
-                        }
-                        .buttonStyle(.plain)  // Remove default button styling
-            
-            VStack {
-                Text(itemTask.taskName)
-                    .strikethrough(itemTask.isCompleted)  // Strikethrough if completed
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Text(itemTask.taskDescription)
-                    .font(.subheadline)
-                    .foregroundStyle(.gray)
-                    .strikethrough(itemTask.isCompleted)  // Strikethrough if completed
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                HStack {
-                    
-                    if let taskDueDate = itemTask.taskDueDate {
-                        Text(formatItemTaskDate(taskDueDate))
-                    }
-                    
-                    if let taskDueTime = itemTask.taskDueTime {
-                        Text(taskDueTime, style: .time)
-                    }
-                    
-                }.font(.caption)
-                    .foregroundStyle(.mediumGrey)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            
-            Spacer()
-            
-        }
-        .padding(.vertical, 8)  // Vertical padding for the row
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Task: \(itemTask.taskName), \(itemTask.isCompleted ? "completed" : "not completed")")
-                .accessibilityHint("Tap to toggle completion")
-            }
-        }
-//#Preview {
-//    #Preview { @MainActor in
-//        TaskRowViewContainer()
-//   //         .modelContainer(previewContainer)
-//    }
-//}
 
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Button(action: {
+                checked.toggle()
+                onEvent(.toggleCompletion)
+            }) {
+                Image(systemName: checked ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(checked ? .green : .gray)
+                    .font(.system(size: 24))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(checked ? "Mark as incomplete" : "Mark as complete")
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(itemTask.taskName)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                    .strikethrough(checked, color: .gray)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if !itemTask.taskDescription.isEmpty {
+                    Text(itemTask.taskDescription)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .strikethrough(checked, color: .gray)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                Text(formatItemTaskDate(itemTask.dateCreated))
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            Spacer()
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 16)
+        .background(Color(.systemBackground))
+        .onAppear {
+            checked = itemTask.isCompleted
+        }
+        .onChange(of: itemTask.isCompleted) { newValue in
+            checked = newValue
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Task: \(itemTask.taskName), \(checked ? "completed" : "not completed")")
+        .accessibilityHint("Tap the button to toggle completion")
+    }
+}
+
+extension Date {
+    var isYesterday: Bool { Calendar.current.isDateInYesterday(self) }
+ 
+}

@@ -135,7 +135,7 @@ struct AddTaskView: View {
     //MARK: - Private Methods -
       func save() {
         /// Saving objectiveTask
-          let itemTask = ItemTask(taskName: taskName, taskDescription: taskDescription, isCompleted: false , taskDueDate: Date.distantFuture, dateCreated: Date.now, taskDueTime: Date.now )
+          let itemTask = ItemTask(taskName: taskName, taskDescription: taskDescription, isCompleted: false , dateCreated: Date.now )
         do {
             context.insert(itemTask)
             try context.save()
