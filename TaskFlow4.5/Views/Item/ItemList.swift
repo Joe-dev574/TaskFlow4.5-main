@@ -35,8 +35,7 @@ struct ItemList: View {
                 LazyVStack {
                     Text(activeTab.rawValue + (activeTab == .events ? " Thou Shalt Not Forget! " : " Focus"))
                         .font(.title3)
-                        .fontDesign(.serif)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.mediumGrey)
                         .padding(.leading, 20)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     ForEach(filteredItems) { item in

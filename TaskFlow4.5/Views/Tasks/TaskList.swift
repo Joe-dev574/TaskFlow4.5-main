@@ -6,13 +6,19 @@
 //
 
 import SwiftUI
+import SwiftData
+
+
+
 
 struct TaskList: View {
+    @Environment(\.modelContext) private var context
+    @Binding var itemTasks: [ItemTask]  // Binding to the parent’s task array
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Text("Task List")
     }
 }
-
 #Preview {
-    TaskList()
+    ContentView()
 }

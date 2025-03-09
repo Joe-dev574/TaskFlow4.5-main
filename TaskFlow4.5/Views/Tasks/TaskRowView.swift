@@ -9,54 +9,81 @@ import SwiftUI
 import SwiftData
 
 
-
+// MARK: - Task Row Event
+/// An enumeration defining possible events for a task row.
+enum TaskRowEvent {
+    case toggleCompletion  // Event for toggling task completion
+}
+// MARK: - Task Row View
+/// A view representing a single task row in the task list.
 struct TaskRowView: View {
+    // MARK: - Properties
     @Environment(\.modelContext) var modelContext
-    @State var itemTask: ItemTask
+    let itemTask: ItemTask  // The task to display
+    let onEvent: (TaskRowEvent) -> Void  // Closure to handle events (e.g., toggling completion)
+    @State private var checked: Bool = false
     
-    var body: some View {
-        HStack {
-            Button {
-                itemTask.isCompleted.toggle()
-            } label: {
-                if itemTask.isCompleted {
-                    filledItemTaskLabel
-                } else {
-                    emptyItemTaskLabel
-                }
-            }
-            .frame(width: 20, height: 20)
-            .buttonStyle(.plain)
-            
-            TextField(itemTask.taskName, text: $itemTask.taskName)
-                .foregroundStyle(itemTask.isCompleted ? .secondary : .primary)
+    private func formatItemTaskDate(_ date: Date) -> String {
+        
+        if date.isToday {
+            return "Today"
+        } else if date.isTomorrow {
+            return "Tomorrow"
+        } else {
+            return date.formatted(date: .numeric, time: .omitted)
         }
     }
-    
-    var filledItemTaskLabel: some View {
-        Circle()
-            .stroke(.mediumGrey, lineWidth: 2)
-            .overlay(alignment: .center) {
-                GeometryReader { geo in
-                    VStack {
-                        Circle()
-                            .fill(.mediumGrey)
-                            .frame(width: geo.size.width*0.7, height: geo.size.height*0.7, alignment: .center)
+    // MARK: - Body
+    var body: some View {
+        HStack(alignment: .top) {
+            // Button to toggle task completion
+                        Button(action: {
+                            onEvent(.toggleCompletion)  // Trigger toggle completion event when tapped
+                        }) {
+                            Image(systemName: itemTask.isCompleted ? "checkmark.circle.fill" : "circle")
+                                .foregroundStyle(.gray)  // Placeholder color; replace with your desired color
+                        }
+                        .buttonStyle(.plain)  // Remove default button styling
+            
+            VStack {
+                Text(itemTask.taskName)
+                    .strikethrough(itemTask.isCompleted)  // Strikethrough if completed
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Text(itemTask.taskDescription)
+                    .font(.subheadline)
+                    .foregroundStyle(.gray)
+                    .strikethrough(itemTask.isCompleted)  // Strikethrough if completed
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                HStack {
+                    
+                    if let taskDueDate = itemTask.taskDueDate {
+                        Text(formatItemTaskDate(taskDueDate))
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
+                    
+                    if let taskDueTime = itemTask.taskDueTime {
+                        Text(taskDueTime, style: .time)
+                    }
+                    
+                }.font(.caption)
+                    .foregroundStyle(.mediumGrey)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-    }
-    
-    var emptyItemTaskLabel: some View {
-        Circle()
-            .stroke(.secondary)
-    }
-}
-
-#Preview {
-    
-    TaskRowView (itemTask: ItemTask(taskName: "testing task", taskDescription: "test this so identify effectiveness of implementation"))
-           
-    }
+            
+            Spacer()
+            
+        }
+        .padding(.vertical, 8)  // Vertical padding for the row
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Task: \(itemTask.taskName), \(itemTask.isCompleted ? "completed" : "not completed")")
+                .accessibilityHint("Tap to toggle completion")
+            }
+        }
+//#Preview {
+//    #Preview { @MainActor in
+//        TaskRowViewContainer()
+//   //         .modelContainer(previewContainer)
+//    }
+//}
 

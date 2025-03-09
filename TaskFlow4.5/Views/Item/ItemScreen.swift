@@ -11,7 +11,6 @@ import SwiftUI
 /// A view displaying a list of items with a fixed toolbar for navigation and actions
 struct ItemScreen: View {
     // MARK: - Environment and State Properties
- 
     @Environment(\.modelContext) private var modelContext
     @State private var showAddItemSheet: Bool = false  // Toggles the add item sheet visibility
     @State private var showTaskListSheet: Bool = false
